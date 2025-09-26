@@ -9,6 +9,7 @@ public class testing {
         checkExists();
         cleanup();
         cycles();
+        testHasher("hTest");
     }
 
     public static boolean checkExists() {
@@ -34,17 +35,16 @@ public class testing {
     public static boolean cleanup() throws IOException {
         if (checkExists()) {
             File gitFile = new File("git");
-        File[] files = gitFile.listFiles();
-        for(File file: files ){
-            File current = file;
-            current.delete();
-        }
-       gitFile.delete();
+            File[] files = gitFile.listFiles();
+            for (File file : files) {
+                File current = file;
+                current.delete();
+            }
+            gitFile.delete();
             return true;
         }
         return false;
     }
-
 
     public static void cycles() throws IOException {
         cleanup();
@@ -56,5 +56,9 @@ public class testing {
         cleanup();
         Git.createGitRepository();
         cleanup();
+    }
+
+    public static void testHasher(String fileName) throws IOException {
+        Git.hashFile(fileName);
     }
 }

@@ -1,1 +1,3 @@
-(9/26) Wrote a tester to delete git over and over again, and has different methods for cleaning up (deleting everything in git and git itself), and for checking if a file exists. I made sure cleanup checks if the file exists before trying to delete it. My implementation is reliable because my code is clear and I check for edge cases 
+(9/26) Wrote a tester to delete git over and over again, and has different methods for cleaning up (deleting everything in git and git itself), and for checking if a file exists. I made sure cleanup checks if the file exists before trying to delete it. My implementation is reliable because my code is clear and I check for edge cases.
+
+(9/26) I wrote a hasher to hash SHA-1 and I also made a test file called hTest that has stuff written in it to run my hash tester on. It worked when i checked it online too! I also account for if the file doesn't exist. TBH I copied my code from sha-256 assignment. 
