@@ -10,7 +10,7 @@ import java.security.NoSuchAlgorithmException;
 
 public class Git {
     public static void main(String[] args) throws IOException {
-       createGitRepository();
+        createGitRepository();
     }
 
     public static boolean createGitRepository() throws IOException {
@@ -30,18 +30,18 @@ public class Git {
         File indexFile = new File("git", "index");
         indexFile.createNewFile();
 
-         // create file HEAD inside git
-         File HEAD = new File("git", "HEAD");
-         HEAD.createNewFile();
+        // create file HEAD inside git
+        File HEAD = new File("git", "HEAD");
+        HEAD.createNewFile();
 
-         System.out.println("Git Repository Created");
-         return true;
+        System.out.println("Git Repository Created");
+        return true;
 
     }
 
-   public static String hashFile(String fileName) throws IOException {
+    public static String hashFile(String fileName) throws IOException {
         File file = new File(fileName);
-        if(!file.exists()){
+        if (!file.exists()) {
             throw new FileNotFoundException("file doesnt exist!");
         }
 
@@ -64,7 +64,7 @@ public class Git {
                 hexString.append(String.format("%02x", b));
             }
             System.out.println(hexString.toString());
-            
+
             return hexString.toString();
 
         } catch (NoSuchAlgorithmException e) {
@@ -74,6 +74,27 @@ public class Git {
         }
 
     }
-    
+
+    public static void BLOB(File file) throws IOException {
+        // creates blob and gets path to file
+        String name = hashFile(file.getName());
+        File blobFile = new File("git/objects", name);
+        blobFile.createNewFile();
+        String contents = "";
+        Path filePath = Paths.get("./" + file);
+
+        // reads all of the file contents/bytes into a string contents
+        byte[] fileBytes = Files.readAllBytes(filePath);
+        for (int i = 0; i < fileBytes.length; i++) {
+            contents += (char) fileBytes[i];
+        }
+
+        // writes contents into blob
+        try {
+            Files.write(Paths.get("./" + blobFile), contents.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 }

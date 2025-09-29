@@ -6,10 +6,13 @@ import java.util.stream.Stream;
 
 public class testing {
     public static void main(String[] args) throws IOException {
-        checkExists();
-        cleanup();
-        cycles();
-        testHasher("hTest");
+        File file = new File("blobTest");
+        file.createNewFile();
+        testBLOB(file);
+        File gitFile = new File("git");
+        cleanup(gitFile);
+        cycles(gitFile);
+        
     }
 
     public static boolean checkExists() {
@@ -32,33 +35,45 @@ public class testing {
         return true;
     }
 
-    public static boolean cleanup() throws IOException {
-        if (checkExists()) {
-            File gitFile = new File("git");
-            File[] files = gitFile.listFiles();
-            for (File file : files) {
-                File current = file;
-                current.delete();
+    public static boolean cleanup(File file) throws IOException {
+        if (file.exists()) {
+
+            File[] files = file.listFiles();
+            for (File theFile : files) {
+                File current = theFile;
+                if (current.isDirectory()) {
+                    cleanup(current);
+                } else {
+                    current.delete();
+                }
             }
-            gitFile.delete();
+            file.delete();
             return true;
         }
         return false;
     }
 
-    public static void cycles() throws IOException {
-        cleanup();
+    public static void cycles(File file) throws IOException {
+        cleanup(file);
         Git.createGitRepository();
-        cleanup();
+        cleanup(file);
         Git.createGitRepository();
-        cleanup();
+        cleanup(file);
         Git.createGitRepository();
-        cleanup();
+        cleanup(file);
         Git.createGitRepository();
-        cleanup();
+        cleanup(file);
     }
 
     public static void testHasher(String fileName) throws IOException {
         Git.hashFile(fileName);
+    }
+
+    public static void testBLOB(File file) throws IOException {
+        Git.BLOB(file);
+        File check = new File("git/objects", Git.hashFile(file.getName()));
+        if (check.exists()) {
+            System.out.println("BLOB EXISTS!");
+        }
     }
 }
