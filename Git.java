@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -89,12 +90,36 @@ public class Git {
             contents += (char) fileBytes[i];
         }
 
+        writeToIndexBLOB(name, file.getName());
+
         // writes contents into blob
         try {
             Files.write(Paths.get("./" + blobFile), contents.getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        
     }
+
+public static void writeToIndexBLOB(String hash, String ogFileName){
+    String toWrite = hash + " " + ogFileName + "\n";
+    try {
+        Files.write(Paths.get("./git/index"), toWrite.getBytes(StandardCharsets.UTF_8));
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+public static void writeToIndexFile(File file) throws IOException{
+    String name = file.getName();
+    String hash = hashFile(file.getName());
+    String toWrite = hash + " " + name;
+    try {
+        Files.write(Paths.get("./git/index"), toWrite.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
 
 }
