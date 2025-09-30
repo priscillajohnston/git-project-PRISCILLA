@@ -18,6 +18,8 @@ public class testing {
         // File gitFile = new File("git");
         // cleanup(gitFile);
         // cycles(gitFile);
+
+        fullReset();
         
     }
 
