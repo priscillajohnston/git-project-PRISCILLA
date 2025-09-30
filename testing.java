@@ -9,9 +9,15 @@ public class testing {
         File file = new File("blobTest");
         file.createNewFile();
         testBLOB(file);
-        File gitFile = new File("git");
-        cleanup(gitFile);
-        cycles(gitFile);
+
+        File randoFile = new File("hello.txt");
+        testWriteFileInIndex(randoFile);
+        File other = new File("hTest");
+        testWriteFileInIndex(other);
+
+        // File gitFile = new File("git");
+        // cleanup(gitFile);
+        // cycles(gitFile);
         
     }
 
@@ -75,5 +81,9 @@ public class testing {
         if (check.exists()) {
             System.out.println("BLOB EXISTS!");
         }
+    }
+
+    public static void testWriteFileInIndex(File file) throws IOException{
+        Git.writeToIndexFile(file);
     }
 }
