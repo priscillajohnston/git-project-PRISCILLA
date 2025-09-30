@@ -86,4 +86,10 @@ public class testing {
     public static void testWriteFileInIndex(File file) throws IOException{
         Git.writeToIndexFile(file);
     }
+
+    public static void fullReset() throws IOException{
+        File file = new File("git");
+        cleanup(file);
+        Git.createGitRepository();
+    }
 }
