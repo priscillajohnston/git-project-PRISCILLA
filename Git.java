@@ -40,13 +40,13 @@ public class Git {
 
     }
 
-    public static String hashFile(String fileName) throws IOException {
-        File file = new File(fileName);
+    public static String hashFile(String fileName, String pathName, String folderName) throws IOException {
+        File file = new File(folderName, fileName);
         if (!file.exists()) {
             throw new FileNotFoundException("file doesnt exist!");
         }
 
-        Path pathToFile = Paths.get("./" + fileName);
+        Path pathToFile = Paths.get(pathName + fileName);
         byte[] fileBytes = Files.readAllBytes(pathToFile);
 
         String fileString = new String(fileBytes);
@@ -76,9 +76,10 @@ public class Git {
 
     }
 
-    public static void BLOB(File file) throws IOException {
+    // creates a BLOB and writes it to index
+    public static void BLOB(File file, String pathName, String folderName) throws IOException {
         // creates blob and gets path to file
-        String name = hashFile(file.getName());
+        String name = hashFile(file.getName(), pathName, folderName);
         File blobFile = new File("git/objects", name);
         blobFile.createNewFile();
         String contents = "";
@@ -90,7 +91,7 @@ public class Git {
             contents += (char) fileBytes[i];
         }
 
-        writeToIndexBLOB(name, file.getName());
+        writeToIndexBLOB(name, file.getName(), pathName);
 
         // writes contents into blob
         try {
@@ -98,28 +99,17 @@ public class Git {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        
     }
 
-public static void writeToIndexBLOB(String hash, String ogFileName){
-    String toWrite = hash + " " + ogFileName + "\n";
-    try {
-        Files.write(Paths.get("./git/index"), toWrite.getBytes(StandardCharsets.UTF_8));
-    } catch (IOException e) {
-        e.printStackTrace();
+    public static void writeToIndexBLOB(String hash, String ogFileName, String pathName) {
+        String toWrite = hash + " " + pathName + ogFileName + "\n";
+        try {
+            Files.write(Paths.get("./git/index"), toWrite.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
-}
 
-public static void writeToIndexFile(File file) throws IOException{
-    String name = file.getName();
-    String hash = hashFile(file.getName());
-    String toWrite = hash + " " + name;
-    try {
-        Files.write(Paths.get("./git/index"), toWrite.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
-}
+
 
 }
