@@ -8,6 +8,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Git {
     public static void main(String[] args) throws IOException {
@@ -40,13 +42,13 @@ public class Git {
 
     }
 
-    public static String hashFile(String fileName, String pathName, String folderName) throws IOException {
+    public static String hashFile(String fileName, String folderName) throws IOException {
         File file = new File(folderName, fileName);
         if (!file.exists()) {
             throw new FileNotFoundException("file doesnt exist!");
         }
 
-        Path pathToFile = Paths.get(pathName + fileName);
+        Path pathToFile = Paths.get(file.getAbsolutePath());
         byte[] fileBytes = Files.readAllBytes(pathToFile);
 
         String fileString = new String(fileBytes);
@@ -77,10 +79,9 @@ public class Git {
     }
 
     // creates a BLOB and writes it to index
-    public static void BLOB(File file, String pathName, String folderName) throws IOException {
+    public static void BLOB(File file, String hash) throws IOException {
         // creates blob and gets path to file
-        String name = hashFile(file.getName(), pathName, folderName);
-        File blobFile = new File("git/objects", name);
+        File blobFile = new File("git/objects", hash);
         blobFile.createNewFile();
         String contents = "";
         Path filePath = Paths.get("./" + file);
@@ -91,8 +92,6 @@ public class Git {
             contents += (char) fileBytes[i];
         }
 
-        writeToIndexBLOB(name, file.getName(), pathName);
-
         // writes contents into blob
         try {
             Files.write(Paths.get("./" + blobFile), contents.getBytes(StandardCharsets.UTF_8));
@@ -101,15 +100,45 @@ public class Git {
         }
     }
 
-    public static void writeToIndexBLOB(String hash, String ogFileName, String pathName) {
-        String toWrite = hash + " " + pathName + ogFileName + "\n";
+   
+
+    public static void addToIndex(File file, String folderName) throws IOException {
+        String hash = hashFile(file.getName(), folderName);
+        String pathString = file.getAbsolutePath();
+        int indexOfFolderName = pathString.indexOf(folderName);
+
+        String toWrite = hash + " " + file.getAbsolutePath().substring(indexOfFolderName) + "\n";
+        
         try {
             Files.write(Paths.get("./git/index"), toWrite.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        
+        BLOB(file, hash);
     }
 
+    public static ArrayList<String> makeArrayFromIndexHelper(File indexFile) throws IOException {
+        String str = "";
+        Path indexFilePath = Paths.get(indexFile.getAbsolutePath());
+        byte[] fileBytes = Files.readAllBytes(indexFilePath);
+        for (int i = 0; i < fileBytes.length; i++) {
+            str += (char) fileBytes[i];
+        }
 
+        // makes arrayList
+        String[] array = str.split("\n");
+        ArrayList<String> listy = new ArrayList<>(Arrays.asList(array));
+        return listy;
+
+    }
+
+    public static boolean indexContains(File indexFile, ArrayList<String> listy, String toCheck) {
+        for (int i = 0; i < listy.size(); i++) {
+            if (listy.get(i).equals(toCheck))
+                return true;
+        }
+        return false;
+    }
 
 }

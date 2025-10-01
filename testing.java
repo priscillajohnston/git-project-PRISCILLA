@@ -2,27 +2,28 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.stream.Stream;
 
 public class testing {
     public static void main(String[] args) throws IOException {
 
-        //checks blobs to index
-        File file = new File("Samples", "blobTest");
-        file.createNewFile();
-        testBLOB(file, "./Samples/", "Samples");
-        File file2 = new File("Samples", "hello.txt");
-        file2.createNewFile();
-        testBLOB(file2, "./Samples/", "Samples");
+        // checks new addToIndex
+        testAddToIndex();
+
+        // checks arraylist making
+        testArrayList();
+
+        // checks hash update
+        testHasher("blobTest", "Samples");
 
         // //checks cleanup and cycles
         // File gitFile = new File("git");
         // cleanup(gitFile);
         // cycles(gitFile);
-        
-        // //resets
-        // fullReset();
-        
+
+        fullReset();
+
     }
 
     public static boolean checkExists() {
@@ -75,25 +76,27 @@ public class testing {
         cleanup(file);
     }
 
-    public static void testHasher(String fileName, String pathName, String folder) throws IOException {
-        Git.hashFile(fileName, pathName, folder);
+    public static void testHasher(String fileName, String folder) throws IOException {
+        Git.hashFile(fileName, folder);
     }
 
-    public static void testBLOB(File file, String pathName, String folderName) throws IOException {
-        Git.BLOB(file, pathName, folderName);
-        File check = new File("git/objects", Git.hashFile(file.getName(), pathName, folderName));
-        if (check.exists()) {
-            System.out.println("BLOB EXISTS!");
-        }
-    }
-
-    // public static void testWriteFileInIndex(File file) throws IOException{
-    //     Git.writeToIndexFile(file);
-    // }
-
-    public static void fullReset() throws IOException{
+    public static void fullReset() throws IOException {
         File file = new File("git");
         cleanup(file);
         Git.createGitRepository();
+    }
+
+    public static void testArrayList() throws IOException {
+        File indexFile = new File("git", "index");
+        ArrayList<String> listy = Git.makeArrayFromIndexHelper(indexFile);
+        System.out.println(listy.toString());
+
+    }
+
+    // also tests blob because adding to the index calls BLOB
+    public static void testAddToIndex() throws IOException {
+        File file = new File("Samples", "blobTest");
+        String folderName = "Samples";
+        Git.addToIndex(file, folderName);
     }
 }
