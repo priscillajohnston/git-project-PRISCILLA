@@ -7,6 +7,8 @@ import java.util.stream.Stream;
 
 public class testing {
     public static void main(String[] args) throws IOException {
+        //checks indexContains
+        testIndexContains();
 
         // checks new addToIndex
         testAddToIndex();
@@ -14,15 +16,15 @@ public class testing {
         // checks arraylist making
         testArrayList();
 
-        // checks hash update
-        testHasher("blobTest", "Samples");
+        // // checks hash update
+        // testHasher("blobTest", "Samples");
 
         // //checks cleanup and cycles
         // File gitFile = new File("git");
         // cleanup(gitFile);
         // cycles(gitFile);
 
-        fullReset();
+        // fullReset();
 
     }
 
@@ -98,5 +100,13 @@ public class testing {
         File file = new File("Samples", "blobTest");
         String folderName = "Samples";
         Git.addToIndex(file, folderName);
+    }
+
+    public static void testIndexContains() throws IOException{
+        File indexFile = new File("git", "index");
+        indexFile.createNewFile();
+        ArrayList<String> listy = Git.makeArrayFromIndexHelper(indexFile);
+        String toCheck = "c65f99f8c5376adadddc46d5cbcf5762f9e55eb7 Samples/blobTest";
+        System.out.println(Git.indexContains(indexFile, listy, toCheck));
     }
 }

@@ -100,22 +100,36 @@ public class Git {
         }
     }
 
-   
-
     public static void addToIndex(File file, String folderName) throws IOException {
         String hash = hashFile(file.getName(), folderName);
         String pathString = file.getAbsolutePath();
         int indexOfFolderName = pathString.indexOf(folderName);
 
-        String toWrite = hash + " " + file.getAbsolutePath().substring(indexOfFolderName) + "\n";
-        
-        try {
-            Files.write(Paths.get("./git/index"), toWrite.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
-        } catch (IOException e) {
-            e.printStackTrace();
+        String toWrite = hash + " " + file.getAbsolutePath().substring(indexOfFolderName);
+
+        // check before writing into index file
+        File indexFile = new File("git", "index");
+        indexFile.createNewFile();
+        ArrayList<String> listy = makeArrayFromIndexHelper(indexFile);
+
+        if (checkModified(indexFile, listy, toWrite)) {
+            //code to overwrite???
         }
         
-        BLOB(file, hash);
+        if (!indexContains(indexFile, listy, toWrite)) {
+            toWrite += "\n";
+            try {
+                Files.write(Paths.get("./git/index"), toWrite.getBytes(StandardCharsets.UTF_8),
+                        StandardOpenOption.APPEND);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            BLOB(file, hash);
+        }
+
+       
+
     }
 
     public static ArrayList<String> makeArrayFromIndexHelper(File indexFile) throws IOException {
@@ -141,4 +155,12 @@ public class Git {
         return false;
     }
 
+    public static boolean checkModified(File indexFile, ArrayList<String> listy, String toCheck) {
+        for (int i = 0; i < listy.size(); i++) {
+            if (listy.get(i).substring(listy.indexOf(" ")).equals(toCheck.substring(toCheck.indexOf(" ")))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
