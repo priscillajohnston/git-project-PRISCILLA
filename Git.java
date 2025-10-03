@@ -43,7 +43,13 @@ public class Git {
     }
 
     public static String hashFile(String fileName, String folderName) throws IOException {
-        File file = new File(folderName, fileName);
+        File file;
+        if (folderName.equals("")) {
+            file = new File(fileName);
+        } else {
+            file = new File(folderName, fileName);
+        }
+
         if (!file.exists()) {
             throw new FileNotFoundException("file doesnt exist!");
         }
@@ -104,31 +110,48 @@ public class Git {
         String hash = hashFile(file.getName(), folderName);
         String pathString = file.getAbsolutePath();
         int indexOfFolderName = pathString.indexOf(folderName);
+        String toWrite = "";
 
-        String toWrite = hash + " " + file.getAbsolutePath().substring(indexOfFolderName);
+        if (indexOfFolderName == -1) {
+            toWrite = hash + " " + file.getAbsolutePath().substring(pathString.indexOf(file.getName()));
+        } else {
+            toWrite = hash + " " + file.getAbsolutePath().substring(indexOfFolderName);
+        }
 
         // check before writing into index file
         File indexFile = new File("git", "index");
         indexFile.createNewFile();
         ArrayList<String> listy = makeArrayFromIndexHelper(indexFile);
 
-        if (checkModified(indexFile, listy, toWrite)) {
-            //code to overwrite???
-        }
-        
         if (!indexContains(indexFile, listy, toWrite)) {
-            toWrite += "\n";
-            try {
-                Files.write(Paths.get("./git/index"), toWrite.getBytes(StandardCharsets.UTF_8),
-                        StandardOpenOption.APPEND);
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (checkModified(indexFile, listy, toWrite) >= 0) {
+                int indexOfModified = checkModified(indexFile, listy, toWrite);
+                listy.remove(indexOfModified);
+                listy.add(toWrite);
+                String editedWrite = "";
+                for (int i = 0; i < listy.size(); i++) {
+                    editedWrite += listy.get(indexOfModified) + "\n";
+                }
+                editedWrite = editedWrite.substring(0, editedWrite.length() - 1);
+                try {
+                    Files.write(Paths.get("./git/index"), editedWrite.getBytes(StandardCharsets.UTF_8));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
-            BLOB(file, hash);
-        }
+            else {
+                toWrite += "\n";
+                try {
+                    Files.write(Paths.get("./git/index"), toWrite.getBytes(StandardCharsets.UTF_8),
+                            StandardOpenOption.APPEND);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
-       
+                BLOB(file, hash);
+            }
+        }
 
     }
 
@@ -155,12 +178,19 @@ public class Git {
         return false;
     }
 
-    public static boolean checkModified(File indexFile, ArrayList<String> listy, String toCheck) {
+    // also calls removeModified!!
+    public static int checkModified(File indexFile, ArrayList<String> listy,
+            String toCheck) {
         for (int i = 0; i < listy.size(); i++) {
-            if (listy.get(i).substring(listy.indexOf(" ")).equals(toCheck.substring(toCheck.indexOf(" ")))) {
-                return true;
+            if (listy.get(i).substring(toCheck.indexOf(" ")).equals(toCheck.substring(toCheck.indexOf(" ")))) {
+                return i;
             }
+
         }
-        return false;
+        return -1;
+    }
+
+    public static int saveIndex(int index) {
+        return index;
     }
 }

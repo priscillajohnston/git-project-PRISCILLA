@@ -8,13 +8,16 @@ import java.util.stream.Stream;
 public class testing {
     public static void main(String[] args) throws IOException {
         //checks indexContains
-        testIndexContains();
+        // testIndexContains();
 
         // checks new addToIndex
-        testAddToIndex();
+        // testAddToIndex();
+        // testAddToIndexEmpty();
+        // testAddToIndexNested();
+        testAddModified();
 
         // checks arraylist making
-        testArrayList();
+        // testArrayList();
 
         // // checks hash update
         // testHasher("blobTest", "Samples");
@@ -102,11 +105,30 @@ public class testing {
         Git.addToIndex(file, folderName);
     }
 
+    public static void testAddToIndexEmpty() throws IOException {
+        File file = new File("", "hi.txt");
+        String folderName = "";
+        Git.addToIndex(file, folderName);
+    }
+
+    public static void testAddToIndexNested() throws IOException {
+        File file = new File("Samples/inner", "hi.txt");
+        String folderName = "Samples/inner";
+        Git.addToIndex(file, folderName);
+    }
+
+
     public static void testIndexContains() throws IOException{
         File indexFile = new File("git", "index");
         indexFile.createNewFile();
         ArrayList<String> listy = Git.makeArrayFromIndexHelper(indexFile);
         String toCheck = "c65f99f8c5376adadddc46d5cbcf5762f9e55eb7 Samples/blobTest";
         System.out.println(Git.indexContains(indexFile, listy, toCheck));
+    }
+
+    public static void testAddModified() throws IOException{
+        File file = new File("Samples/inner", "hi.txt");
+        String folderName = "Samples/inner";
+        Git.addToIndex(file, folderName);
     }
 }
