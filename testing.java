@@ -7,6 +7,9 @@ import java.util.stream.Stream;
 
 public class testing {
     public static void main(String[] args) throws IOException {
+        //tree testing 
+        testTreeMakerOneNested();
+
         //checks indexContains
         // testIndexContains();
 
@@ -14,7 +17,7 @@ public class testing {
         // testAddToIndex();
         // testAddToIndexEmpty();
         // testAddToIndexNested();
-        testAddModified();
+        // testAddModified();
 
         // checks arraylist making
         // testArrayList();
@@ -130,5 +133,10 @@ public class testing {
         File file = new File("Samples/inner", "hi.txt");
         String folderName = "Samples/inner";
         Git.addToIndex(file, folderName);
+    }
+
+    public static void testTreeMakerOneNested() throws IOException{
+        File file = new File("Samples");
+        Git.makeTree("Samples");
     }
 }

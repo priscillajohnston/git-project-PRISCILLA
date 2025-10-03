@@ -190,7 +190,67 @@ public class Git {
         return -1;
     }
 
-    public static int saveIndex(int index) {
-        return index;
+    public static void makeTree(String directoryPath) throws IOException {
+        // makes the file and initializes important items
+        //Path path = new Path(directoryPath);
+        File treeFile = new File(directoryPath);
+        treeFile.mkdir();
+        if(!treeFile.isDirectory()){
+            throw new FileNotFoundException("doesnt exist :(");
+        }
+        File[] files = treeFile.listFiles();
+        String toWrite = "";
+
+        // loops through tree - for files adds to index/creates blob?? directories its
+        // recursive
+        for (File theFile : files) {
+            File current = theFile;
+            if (current.isDirectory()) {
+                makeTree(current.getName());
+            } else {
+                toWrite += "\n" + "blob" + current.hashCode() + current.getName();
+            }
+        }
+        // gets rid of the new line for the first entry since not needed
+        toWrite = toWrite.substring(1);
+
+        //makes official tree file w hash name of its contents (which is hash of towrite)
+        File officialTree = new File(generateSHA1HashHelper(toWrite));
+        officialTree.createNewFile();
+        // writes towrite into official tree file
+        try {
+            Files.write(Paths.get(officialTree.getAbsolutePath()), toWrite.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+ 
+        
+    }
+
+    public static String generateSHA1HashHelper(String input) {
+        try {
+            // Get an instance of the SHA-1 MessageDigest
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+
+            // Convert the input string to bytes and digest them
+            byte[] messageDigest = md.digest(input.getBytes());
+
+            // Convert the byte array into a hexadecimal string
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : messageDigest) {
+                // Convert each byte to its hexadecimal representation
+                String hex = Integer.toHexString(0xff & b);
+                // Prepend a '0' if the hex value is a single digit
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            // Handle the case where SHA-1 algorithm is not available
+            throw new RuntimeException("SHA-1 algorithm not found.", e);
+        }
     }
 }
