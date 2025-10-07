@@ -122,8 +122,17 @@ public class Git {
         File indexFile = new File("git", "index");
         indexFile.createNewFile();
         ArrayList<String> listy = makeArrayFromIndexHelper(indexFile);
+        if (indexFile.length() == 0) {
+            toWrite += "\n";
+            try {
+                Files.write(Paths.get("./git/index"), toWrite.getBytes(StandardCharsets.UTF_8),
+                        StandardOpenOption.APPEND);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-        if (!indexContains(indexFile, listy, toWrite)) {
+            BLOB(file, hash);
+        } else if (!indexContains(indexFile, listy, toWrite)) {
             if (checkModified(indexFile, listy, toWrite) >= 0) {
                 int indexOfModified = checkModified(indexFile, listy, toWrite);
                 listy.remove(indexOfModified);
@@ -179,8 +188,7 @@ public class Git {
     }
 
     // also calls removeModified!!
-    public static int checkModified(File indexFile, ArrayList<String> listy,
-            String toCheck) {
+    public static int checkModified(File indexFile, ArrayList<String> listy, String toCheck) {
         for (int i = 0; i < listy.size(); i++) {
             if (listy.get(i).substring(toCheck.indexOf(" ")).equals(toCheck.substring(toCheck.indexOf(" ")))) {
                 return i;
@@ -190,7 +198,181 @@ public class Git {
         return -1;
     }
 
-    public static int saveIndex(int index) {
-        return index;
+    public static String makeTree(String directoryPath) throws IOException {
+        // makes the file and initializes important items
+        // Path path = new Path(directoryPath);
+        File treeFile = new File(directoryPath);
+        // treeFile.mkdir();
+        // System.out.println(treeFile.getAbsolutePath());
+        if (!treeFile.exists() || !treeFile.isDirectory()) {
+            throw new FileNotFoundException("doesnt exist :(");
+        }
+        File[] files = treeFile.listFiles();
+        String toWrite = "";
+
+        // loops through tree - for files adds to index/creates blob?? directories its
+        // recursive
+        for (File theFile : files) {
+            File current = theFile;
+            if (current.isDirectory()) {
+                toWrite += "tree " + makeTree(current.getPath()) + " " + current.getName() + "\n";
+            } else {
+                toWrite += "blob " + current.hashCode() + " " + current.getName() + "\n";
+            }
+        }
+
+        // gets rid of last new line
+        toWrite = toWrite.substring(0, toWrite.length() - 1);
+
+        // makes official tree file w hash name of its contents (which is hash of
+        // towrite)
+        String hashTitle = generateSHA1HashHelper(toWrite);
+        File officialTree = new File(hashTitle);
+        officialTree.createNewFile();
+        // writes towrite into official tree file
+        try {
+            Files.write(Paths.get(officialTree.getAbsolutePath()), toWrite.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return hashTitle;
+
+    }
+
+    public static String generateSHA1HashHelper(String input) {
+        try {
+            // Get an instance of the SHA-1 MessageDigest
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+
+            // Convert the input string to bytes and digest them
+            byte[] messageDigest = md.digest(input.getBytes());
+
+            // Convert the byte array into a hexadecimal string
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : messageDigest) {
+                // Convert each byte to its hexadecimal representation
+                String hex = Integer.toHexString(0xff & b);
+                // Prepend a '0' if the hex value is a single digit
+                if (hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+
+        } catch (NoSuchAlgorithmException e) {
+            // Handle the case where SHA-1 algorithm is not available
+            throw new RuntimeException("SHA-1 algorithm not found.", e);
+        }
+    }
+
+    public static void makeTree() throws IOException {
+
+        Path indexPath = Paths.get("git/index");
+
+        byte[] indexBytes = Files.readAllBytes(indexPath);
+        String index = new String(indexBytes);
+
+        // arraylist with each line as an entry
+        String[] arr = index.split("\n");
+        ArrayList<String> listy = new ArrayList<String>(Arrays.asList(arr));
+        Git.addBlob(listy);
+        // sorts listy by longest pathName - working list!
+        Git.makeTreeRecursive(listy, getIndexToWorkOn(listy));
+    }
+
+    public static ArrayList<String> makeTreeRecursive(ArrayList<String> workingList, int index) throws IOException {
+
+        String currentPath = getPathNameHelper(workingList.get(index));
+        String[] splitSlashes = currentPath.split("/");
+        if (splitSlashes.length == 1) {
+            String toWrite = "";
+            for (int i = 0; i < workingList.size(); i++) {
+                toWrite += workingList.get(i) + "\n";
+            }
+            toWrite = toWrite.substring(0, toWrite.length() - 1);
+
+            File rootTree = new File(generateSHA1HashHelper(toWrite));
+            rootTree.createNewFile();
+
+            try {
+                Files.write(Paths.get(rootTree.getAbsolutePath()), toWrite.getBytes(StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        // gets rid of fileName in path
+        String shortenedPath = "";
+        for (int i = 0; i < splitSlashes.length - 1; i++) {
+            shortenedPath += splitSlashes[i] + "/";
+        }
+
+        int indexOfPath = workingList.get(index).length() - currentPath.length(); // check math
+
+        // goes through working list and adds to a new arraylist the current stuff we
+        // need for tree for current directory
+        ArrayList<String> currentDirectoryEntries = new ArrayList<String>();
+
+        for (int i = 0; i < workingList.size(); i++) {
+            // if it is in the directory we are working with
+            if (workingList.get(i).indexOf(shortenedPath) == indexOfPath) {
+                currentDirectoryEntries.add(workingList.get(i).substring(0, indexOfPath)
+                        + workingList.get(i).substring(indexOfPath + shortenedPath.length()));
+                workingList.remove(i);
+                i--;
+            }
+        }
+
+        String toWrite = "";
+        for (int i = 0; i < currentDirectoryEntries.size(); i++) {
+            toWrite += currentDirectoryEntries.get(i) + "\n";
+        }
+        toWrite = toWrite.substring(0, toWrite.length() - 1);
+
+        File dirTree = new File(generateSHA1HashHelper(toWrite));
+        dirTree.createNewFile();
+
+        try {
+            Files.write(Paths.get(dirTree.getAbsolutePath()), toWrite.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        workingList.add( "tree " + generateSHA1HashHelper(toWrite) + " " + shortenedPath.substring(0, shortenedPath.length() - 1));
+
+        return makeTreeRecursive(workingList, getIndexToWorkOn(workingList));
+
+    }
+
+    public static String getPathNameHelper(String entryLine) {
+        entryLine = entryLine.substring(entryLine.indexOf(" ") + 1);
+        entryLine = entryLine.substring(entryLine.indexOf(" ") + 1);
+        return entryLine;
+    }
+
+    public static ArrayList<String> addBlob(ArrayList<String> unsortedArr) {
+        for (int i = 0; i < unsortedArr.size(); i++) {
+            unsortedArr.set(i, "blob " + unsortedArr.get(i));
+        }
+        return unsortedArr;
+    }
+
+    public static int getIndexToWorkOn(ArrayList<String> unsortedArr) {
+        // loops through array to get longest path
+        int longestIndex = -1;
+
+        int longestArrLength = -1;
+        for (int i = 0; i < unsortedArr.size(); i++) {
+            String thisPath = getPathNameHelper(unsortedArr.get(i));
+            String[] thisArr = thisPath.split("/");
+            if (thisArr.length > longestArrLength) {
+                longestIndex = i;
+                longestArrLength = thisArr.length;
+
+            }
+        }
+        return longestIndex;
     }
 }

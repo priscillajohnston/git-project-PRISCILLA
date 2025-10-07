@@ -7,14 +7,20 @@ import java.util.stream.Stream;
 
 public class testing {
     public static void main(String[] args) throws IOException {
+
+        testWorkingList();
+
+        //tree testing 
+        // testTreeMakerOneNested();
+
         //checks indexContains
         // testIndexContains();
 
         // checks new addToIndex
-        // testAddToIndex();
         // testAddToIndexEmpty();
+        // testAddToIndex2();
         // testAddToIndexNested();
-        testAddModified();
+        // testAddToIndex();
 
         // checks arraylist making
         // testArrayList();
@@ -100,19 +106,25 @@ public class testing {
 
     // also tests blob because adding to the index calls BLOB
     public static void testAddToIndex() throws IOException {
-        File file = new File("Samples", "blobTest");
+        File file = new File("Samples", "hello.txt");
+        String folderName = "Samples";
+        Git.addToIndex(file, folderName);
+    }
+
+    public static void testAddToIndex2() throws IOException {
+        File file = new File("Samples", "test.txt");
         String folderName = "Samples";
         Git.addToIndex(file, folderName);
     }
 
     public static void testAddToIndexEmpty() throws IOException {
-        File file = new File("", "hi.txt");
+        File file = new File("", "random.txt");
         String folderName = "";
         Git.addToIndex(file, folderName);
     }
 
     public static void testAddToIndexNested() throws IOException {
-        File file = new File("Samples/inner", "hi.txt");
+        File file = new File("Samples/inner", "inside.txt");
         String folderName = "Samples/inner";
         Git.addToIndex(file, folderName);
     }
@@ -130,5 +142,14 @@ public class testing {
         File file = new File("Samples/inner", "hi.txt");
         String folderName = "Samples/inner";
         Git.addToIndex(file, folderName);
+    }
+
+    public static void testTreeMakerOneNested() throws IOException{
+        File file = new File("Samples");
+        Git.makeTree("Samples");
+    }
+
+    public static void testWorkingList() throws IOException{
+        Git.makeTree();
     }
 }
