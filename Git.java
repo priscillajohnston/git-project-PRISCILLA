@@ -267,8 +267,8 @@ public class Git {
         }
     }
 
-    public static void makeTree() throws IOException{
-       
+    public static void makeTree() throws IOException {
+
         Path indexPath = Paths.get("git/index");
 
         byte[] indexBytes = Files.readAllBytes(indexPath);
@@ -283,19 +283,19 @@ public class Git {
     }
 
     public static ArrayList<String> makeTreeRecursive(ArrayList<String> workingList, int index) throws IOException {
-      
+
         String currentPath = getPathNameHelper(workingList.get(index));
         String[] splitSlashes = currentPath.split("/");
-        if(splitSlashes.length == 1){
+        if (splitSlashes.length == 1) {
             String toWrite = "";
-            for(int i = 0; i<workingList.size(); i++){
+            for (int i = 0; i < workingList.size(); i++) {
                 toWrite += workingList.get(i) + "\n";
             }
-            toWrite = toWrite.substring(0,toWrite.length()-1);
-    
+            toWrite = toWrite.substring(0, toWrite.length() - 1);
+
             File rootTree = new File(generateSHA1HashHelper(toWrite));
             rootTree.createNewFile();
-    
+
             try {
                 Files.write(Paths.get(rootTree.getAbsolutePath()), toWrite.getBytes(StandardCharsets.UTF_8));
             } catch (IOException e) {
@@ -303,7 +303,7 @@ public class Git {
             }
             return null;
         }
-        //gets rid of fileName in path 
+        // gets rid of fileName in path
         String shortenedPath = "";
         for (int i = 0; i < splitSlashes.length - 1; i++) {
             shortenedPath += splitSlashes[i] + "/";
@@ -314,22 +314,22 @@ public class Git {
         // goes through working list and adds to a new arraylist the current stuff we
         // need for tree for current directory
         ArrayList<String> currentDirectoryEntries = new ArrayList<String>();
-       
-       
+
         for (int i = 0; i < workingList.size(); i++) {
             // if it is in the directory we are working with
             if (workingList.get(i).indexOf(shortenedPath) == indexOfPath) {
-                currentDirectoryEntries.add(workingList.get(i).substring(0,indexOfPath) + workingList.get(i).substring(indexOfPath + shortenedPath.length()));
+                currentDirectoryEntries.add(workingList.get(i).substring(0, indexOfPath)
+                        + workingList.get(i).substring(indexOfPath + shortenedPath.length()));
                 workingList.remove(i);
                 i--;
             }
         }
 
         String toWrite = "";
-        for(int i = 0; i<currentDirectoryEntries.size(); i++){
+        for (int i = 0; i < currentDirectoryEntries.size(); i++) {
             toWrite += currentDirectoryEntries.get(i) + "\n";
         }
-        toWrite = toWrite.substring(0,toWrite.length()-1);
+        toWrite = toWrite.substring(0, toWrite.length() - 1);
 
         File dirTree = new File(generateSHA1HashHelper(toWrite));
         dirTree.createNewFile();
@@ -340,7 +340,8 @@ public class Git {
             e.printStackTrace();
         }
 
-        
+        workingList.add( "tree " + generateSHA1HashHelper(toWrite) + " " + shortenedPath.substring(0, shortenedPath.length() - 1));
+
         return makeTreeRecursive(workingList, getIndexToWorkOn(workingList));
 
     }
@@ -358,20 +359,20 @@ public class Git {
         return unsortedArr;
     }
 
-    public static int getIndexToWorkOn(ArrayList<String> unsortedArr){
-         // loops through array to get longest path
-         int longestIndex = -1;
-  
-         int longestArrLength = -1;
-         for (int i = 0; i < unsortedArr.size(); i++) {
-             String thisPath = getPathNameHelper(unsortedArr.get(i));
-             String[] thisArr = thisPath.split("/");
-             if (thisArr.length > longestArrLength) {
-                 longestIndex = i;
-                 longestArrLength = thisArr.length;
-                 
-             }  
-         }
-         return longestIndex;
+    public static int getIndexToWorkOn(ArrayList<String> unsortedArr) {
+        // loops through array to get longest path
+        int longestIndex = -1;
+
+        int longestArrLength = -1;
+        for (int i = 0; i < unsortedArr.size(); i++) {
+            String thisPath = getPathNameHelper(unsortedArr.get(i));
+            String[] thisArr = thisPath.split("/");
+            if (thisArr.length > longestArrLength) {
+                longestIndex = i;
+                longestArrLength = thisArr.length;
+
+            }
+        }
+        return longestIndex;
     }
 }

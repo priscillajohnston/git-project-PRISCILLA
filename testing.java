@@ -17,10 +17,10 @@ public class testing {
         // testIndexContains();
 
         // checks new addToIndex
-        // testAddToIndex();
         // testAddToIndexEmpty();
+        // testAddToIndex2();
         // testAddToIndexNested();
-        // testAddModified();
+        // testAddToIndex();
 
         // checks arraylist making
         // testArrayList();
@@ -111,6 +111,12 @@ public class testing {
         Git.addToIndex(file, folderName);
     }
 
+    public static void testAddToIndex2() throws IOException {
+        File file = new File("Samples", "test.txt");
+        String folderName = "Samples";
+        Git.addToIndex(file, folderName);
+    }
+
     public static void testAddToIndexEmpty() throws IOException {
         File file = new File("", "random.txt");
         String folderName = "";
@@ -118,7 +124,7 @@ public class testing {
     }
 
     public static void testAddToIndexNested() throws IOException {
-        File file = new File("Samples/inner", "hi.txt");
+        File file = new File("Samples/inner", "inside.txt");
         String folderName = "Samples/inner";
         Git.addToIndex(file, folderName);
     }
