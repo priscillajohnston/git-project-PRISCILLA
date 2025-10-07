@@ -305,22 +305,23 @@ public class Git {
         }
         //gets rid of fileName in path 
         String shortenedPath = "";
-        for (int i = 0; i < splitSlashes.length - 2; i++) {
+        for (int i = 0; i < splitSlashes.length - 1; i++) {
             shortenedPath += splitSlashes[i] + "/";
         }
 
-        int indexOfPath = workingList.get(0).length() - currentPath.length(); // check math
+        int indexOfPath = workingList.get(index).length() - currentPath.length(); // check math
 
         // goes through working list and adds to a new arraylist the current stuff we
         // need for tree for current directory
         ArrayList<String> currentDirectoryEntries = new ArrayList<String>();
-        currentDirectoryEntries.add(workingList.get(0));
-        workingList.remove(0);
+       
+       
         for (int i = 0; i < workingList.size(); i++) {
             // if it is in the directory we are working with
             if (workingList.get(i).indexOf(shortenedPath) == indexOfPath) {
                 currentDirectoryEntries.add(workingList.get(i).substring(0,indexOfPath) + workingList.get(i).substring(indexOfPath + shortenedPath.length()));
                 workingList.remove(i);
+                i--;
             }
         }
 
@@ -339,6 +340,7 @@ public class Git {
             e.printStackTrace();
         }
 
+        
         return makeTreeRecursive(workingList, getIndexToWorkOn(workingList));
 
     }
