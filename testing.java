@@ -7,8 +7,11 @@ import java.util.stream.Stream;
 
 public class testing {
     public static void main(String[] args) throws IOException {
-
-        testWorkingList();
+        // Git.createGitRepository();
+        // testAddToIndex();
+        // testAddToIndex2();
+        // testAddToIndexNested();
+        // testWorkingList();
 
         //tree testing 
         // testTreeMakerOneNested();
@@ -33,7 +36,7 @@ public class testing {
         // cleanup(gitFile);
         // cycles(gitFile);
 
-        // fullReset();
+        fullReset();
 
     }
 
