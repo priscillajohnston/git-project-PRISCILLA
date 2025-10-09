@@ -132,6 +132,7 @@ public class Git {
             }
 
             BLOB(file, hash);
+
         } else if (!indexContains(indexFile, listy, toWrite)) {
             if (checkModified(indexFile, listy, toWrite) >= 0) {
                 int indexOfModified = checkModified(indexFile, listy, toWrite);
@@ -147,6 +148,7 @@ public class Git {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                 BLOB(file, hash);
             }
 
             else {
@@ -293,7 +295,7 @@ public class Git {
             }
             toWrite = toWrite.substring(0, toWrite.length() - 1);
 
-            File rootTree = new File(generateSHA1HashHelper(toWrite));
+            File rootTree = new File("git/objects", generateSHA1HashHelper(toWrite));
             rootTree.createNewFile();
 
             try {
@@ -331,7 +333,7 @@ public class Git {
         }
         toWrite = toWrite.substring(0, toWrite.length() - 1);
 
-        File dirTree = new File(generateSHA1HashHelper(toWrite));
+        File dirTree = new File("git/objects", generateSHA1HashHelper(toWrite)); // had to edit to save in the objects folder
         dirTree.createNewFile();
 
         try {
