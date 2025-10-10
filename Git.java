@@ -8,8 +8,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 
 public class Git {
     public static void main(String[] args) throws IOException {
@@ -386,7 +388,7 @@ public class Git {
     }
 
     public static void commit(String author, String messsage) throws IOException{
-        String rootHash = makeTree(messsage);
+        String rootHash = makeTree();
         Path headPath = Paths.get("git/HEAD");
         String parent = "";
         if(Files.exists(headPath)){
@@ -395,6 +397,22 @@ public class Git {
                 parent = lastCommitString;
             }
         }
+        //how to get date and time? look up when you have wifi
+
+        String commitContents = "";
+        commitContents += "tree: " + rootHash + "\n";
+        commitContents += "parent: " + parent + "\n";
+        commitContents += "author: " + author + "\n";
+        Date currentdate = new Date();
+        commitContents += "date: " + currentdate + "\n";
+        commitContents += "message: " + messsage + "\n";
+
+        String commitHash = generateSHA1HashHelper(commitContents);
+        File commitFile = new File("git/objects", commitHash);
+        commitFile.createNewFile();
+        Files.write(commitFile.toPath(), commitContents.getBytes(StandardCharsets.UTF_8));
+        Files.write(headPath, commitHash.getBytes(StandardCharsets.UTF_8));
+        //how do i get the head file to point to something... do i just write into the HEAD file...?
         
     }
 }

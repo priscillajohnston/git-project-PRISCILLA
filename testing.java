@@ -7,11 +7,13 @@ import java.util.stream.Stream;
 
 public class testing {
     public static void main(String[] args) throws IOException {
-        // Git.createGitRepository();
-        // testAddToIndex();
-        // testAddToIndex2();
-        // testAddToIndexNested();
-        // testWorkingList();
+        Git.createGitRepository();
+        testAddToIndex();
+        testAddToIndex2();
+        testAddToIndexNested();
+        testCommit();
+        testSecondCommitAfterModification();
+        testWorkingList();
         //fullReset();
 
         //tree testing 
@@ -155,5 +157,16 @@ public class testing {
 
     public static void testWorkingList() throws IOException{
         System.out.println(Git.makeTree());
+    }
+
+    public static void testCommit() throws IOException{
+        Git.commit("ellika", "best commit ever");
+    }
+
+    public static void testSecondCommitAfterModification() throws IOException{
+        File file = new File("Samples/inner", "forCommits.txt");
+        String folderName = "Samples/inner";
+        Git.addToIndex(file, folderName);
+        Git.commit("ellika", "best commit ever");
     }
 }
