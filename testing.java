@@ -12,6 +12,7 @@ public class testing {
         // testAddToIndex2();
         // testAddToIndexNested();
         // testWorkingList();
+        //fullReset();
 
         //tree testing 
         // testTreeMakerOneNested();
@@ -36,7 +37,7 @@ public class testing {
         // cleanup(gitFile);
         // cycles(gitFile);
 
-        fullReset();
+        //fullReset();
 
     }
 
@@ -153,6 +154,6 @@ public class testing {
     }
 
     public static void testWorkingList() throws IOException{
-        Git.makeTree();
+        System.out.println(Git.makeTree());
     }
 }

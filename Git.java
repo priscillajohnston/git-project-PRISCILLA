@@ -269,7 +269,7 @@ public class Git {
         }
     }
 
-    public static void makeTree() throws IOException {
+    public static String makeTree() throws IOException {
 
         Path indexPath = Paths.get("git/index");
 
@@ -281,7 +281,11 @@ public class Git {
         ArrayList<String> listy = new ArrayList<String>(Arrays.asList(arr));
         Git.addBlob(listy);
         // sorts listy by longest pathName - working list!
-        Git.makeTreeRecursive(listy, getIndexToWorkOn(listy));
+        ArrayList<String> treelist = Git.makeTreeRecursive(listy, getIndexToWorkOn(listy));
+        return treelist.get(0); // added this and modified line above
+        // String last = treelist.get(treelist.size() - 1);
+        // String[] parts = last.split(" ");
+        // return parts[1];
     }
 
     public static ArrayList<String> makeTreeRecursive(ArrayList<String> workingList, int index) throws IOException {
@@ -296,14 +300,17 @@ public class Git {
             toWrite = toWrite.substring(0, toWrite.length() - 1);
 
             File rootTree = new File("git/objects", generateSHA1HashHelper(toWrite));
-            rootTree.createNewFile();
+            rootTree.createNewFile(); 
 
             try {
                 Files.write(Paths.get(rootTree.getAbsolutePath()), toWrite.getBytes(StandardCharsets.UTF_8));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return null;
+
+            ArrayList<String> rootHash = new ArrayList<>();
+            rootHash.add(generateSHA1HashHelper(toWrite)); //added this to ensure returning the right thing
+            return rootHash;
         }
         // gets rid of fileName in path
         String shortenedPath = "";
@@ -376,5 +383,18 @@ public class Git {
             }
         }
         return longestIndex;
+    }
+
+    public static void commit(String author, String messsage) throws IOException{
+        String rootHash = makeTree(messsage);
+        Path headPath = Paths.get("git/HEAD");
+        String parent = "";
+        if(Files.exists(headPath)){
+            String lastCommitString = Files.readString(headPath);
+            if(lastCommitString.isEmpty()){
+                parent = lastCommitString;
+            }
+        }
+        
     }
 }

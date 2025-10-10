@@ -2,4 +2,4 @@
 
 (9/26) I wrote a hasher to hash SHA-1 and I also made a test file called hTest that has stuff written in it to run my hash tester on. It worked when i checked it online too! I also account for if the file doesn't exist. TBH I copied my code from sha-256 assignment. 
 
-(10/9) I found a small bug where the trees and blobs were not being saved to the objects folder. Fixed this in the recursive method to ensure files are written to the correct folder for git functionality.
+(10/9) I found a small bug where the trees and blobs were not being saved to the objects folder. Fixed this in the recursive method to ensure files are written to the correct folder for git functionality. Also did not return the tree hash so changed it to do that.
