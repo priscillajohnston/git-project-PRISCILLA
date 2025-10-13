@@ -393,7 +393,7 @@ public class Git {
         String parent = "";
         if(Files.exists(headPath)){
             String lastCommitString = Files.readString(headPath);
-            if(lastCommitString.isEmpty()){
+            if(!lastCommitString.isEmpty()){
                 parent = lastCommitString;
             }
         }
@@ -413,6 +413,5 @@ public class Git {
         Files.write(commitFile.toPath(), commitContents.getBytes(StandardCharsets.UTF_8));
         Files.write(headPath, commitHash.getBytes(StandardCharsets.UTF_8));
         //how do i get the head file to point to something... do i just write into the HEAD file...?
-        
     }
 }
