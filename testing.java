@@ -8,7 +8,8 @@ import java.util.stream.Stream;
 
 public class testing {
     public static void main(String[] args) throws IOException {
-        testCommitOnce();
+        robustReset();
+        fullReset();
 
         //tree testing 
         // testTreeMakerOneNested();
@@ -250,4 +251,3 @@ public class testing {
         Git.commit("talia", "best ever");
     }
 }
-

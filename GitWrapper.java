@@ -33,7 +33,7 @@ public class GitWrapper {
         if(!file.exists()){
             throw new Exception("Excuse you! That file does not exist.");
         }
-        if(!file.isDirectory()){
+        if(file.isDirectory()){
             throw new Exception("Excuse you! That file is a directory so we cannot add it.");
         }
         Git.addToIndex(file, "");
@@ -62,7 +62,7 @@ public class GitWrapper {
      */
     public String commit(String author, String message) throws IOException {
         Git.commit(author, message);
-        Path headPath = Paths.get("objects/HEAD");
+        Path headPath = Paths.get("git/HEAD");
         if(!Files.exists(headPath)){
             throw new IOException("Head file does not exist...");
         }
@@ -85,6 +85,120 @@ public class GitWrapper {
      * @throws Exception 
      */
     public void checkout(String commitHash) throws Exception {
+        // Validate the target commit exists and is reachable from HEAD
+        File targetCommitFile = new File("git/objects", commitHash);
+        if (!targetCommitFile.exists()) {
+            throw new Exception("Commit does not exist: " + commitHash);
+        }
+
+        Path headPath = Paths.get("git/HEAD");
+        if (!Files.exists(headPath)) {
+            throw new Exception("HEAD does not exist. Initialize and commit first.");
+        }
+        String currentHash = Files.readString(headPath, StandardCharsets.UTF_8).trim();
+        if (currentHash.isEmpty()) {
+            throw new Exception("HEAD is empty. No commits to traverse.");
+        }
+
+        boolean found = false;
+        while (true) {
+            if (currentHash.equals(commitHash)) { found = true; break; }
+            File currentCommit = new File("git/objects", currentHash);
+            if (!currentCommit.exists()) break;
+            List<String> commitLines = Files.readAllLines(currentCommit.toPath(), StandardCharsets.UTF_8);
+            if (commitLines.size() < 2) break;
+            String parentLine = commitLines.get(1); // "parent: <hash>" or empty
+            String[] parts = parentLine.split(": ", 2);
+            String parent = parts.length == 2 ? parts[1].trim() : "";
+            if (parent.isEmpty()) break; // reached root without match
+            currentHash = parent;
+        }
+        if (!found) {
+            throw new Exception("Specified commit is not reachable from HEAD: " + commitHash);
+        }
+
+        // Resolve the root tree of the target commit
+        List<String> targetLines = Files.readAllLines(targetCommitFile.toPath(), StandardCharsets.UTF_8);
+        if (targetLines.isEmpty()) {
+            throw new Exception("Commit file is empty: " + commitHash);
+        }
+        String treeLine = targetLines.get(0); // "tree: <treeHash>"
+        String[] treeParts = treeLine.split(": ", 2);
+        if (treeParts.length != 2) {
+            throw new Exception("Malformed commit (missing tree): " + commitHash);
+        }
+        String rootTreeHash = treeParts[1].trim();
+
+        // Clean working directory except for git/
+        cleanWorkingDirectory();
+
+        // Restore files/dirs from the tree
+        restoreTreeInto(rootTreeHash, new File("."));
+    }
+
+    public static void deleteRecursively(File file){
+        if(file.exists()){
+            if(file.isDirectory()){
+                for (File subFile : file.listFiles()) {
+                    deleteRecursively(subFile);
+                }
+            }
+            file.delete();
+        }
+    }
+
+    public static void restoreTree(String hashString) throws Exception {
+        restoreTreeInto(hashString, new File("."));
+    }
+
+    private static void restoreTreeInto(String treeHash, File baseDir) throws Exception {
+        File treeFile = new File("git/objects", treeHash);
+        if (!treeFile.exists()) {
+            throw new Exception("Tree object not found: " + treeHash);
+        }
+        List<String> lines = Files.readAllLines(treeFile.toPath(), StandardCharsets.UTF_8);
+        for (String line : lines) {
+            if (line.trim().isEmpty()) continue;
+            String[] parts = line.split(" ", 3);
+            if (parts.length < 3) continue;
+            String kind = parts[0];
+            String childHash = parts[1];
+            String name = parts[2];
+
+            if ("blob".equals(kind)) {
+                File outFile = new File(baseDir, name);
+                File blobFile = new File("git/objects", childHash);
+                String content = Files.readString(blobFile.toPath(), StandardCharsets.UTF_8);
+                if (outFile.getParentFile() != null) {
+                    outFile.getParentFile().mkdirs();
+                }
+                Files.write(outFile.toPath(), content.getBytes(StandardCharsets.UTF_8));
+            } else if ("tree".equals(kind)) {
+                File newDir = new File(baseDir, name);
+                newDir.mkdirs();
+                restoreTreeInto(childHash, newDir);
+            }
+        }
+    }
+
+    private static void cleanWorkingDirectory() {
+        File cwd = new File(".");
+        File[] entries = cwd.listFiles();
+        if (entries == null) return;
+        for (File entry : entries) {
+            if (entry.getName().equals("git")) continue;
+            if (entry.isDirectory()) {
+                deleteRecursively(entry);
+                continue;
+            }
+            String name = entry.getName().toLowerCase();
+            if (name.endsWith(".txt")) {
+                entry.delete();
+            }
+        }
+    }
+
+    public void alternativeCheckout(String commitHash) throws Exception {
         // to-do: implement functionality here
         File commitFile = new File("git/objects", commitHash);
         if(!commitFile.exists()){
@@ -108,18 +222,7 @@ public class GitWrapper {
         //then delete all the files outside of git
     }
 
-    public static void deleteRecursively(File file){
-        if(file.exists()){
-            if(file.isDirectory()){
-                for (File subFile : file.listFiles()) {
-                    deleteRecursively(subFile);
-                }
-            }
-            file.delete();
-        }
-    }
-
-    public static void restoreTree(String hashString) throws Exception{ //maybe give it the directory
+    public static void restoreTree2(String hashString) throws Exception{ //maybe give it the directory
         //implement now
         // go to tree file then restore the things inside then loop again and write to text files etc keep lopping
         File treeFile = new File("git/objects", hashString);
@@ -141,8 +244,9 @@ public class GitWrapper {
             else if(blobTree.equals("tree")){
                 File newDirectory = new File(name);
                 newDirectory.mkdir();
-                restoreTree(hashString);
+                restoreTree2(hashString);
             }
         }
     }
 }
+

@@ -109,7 +109,12 @@ public class Git {
     }
 
     public static void addToIndex(File file, String folderName) throws IOException {
-        String hash = hashFile(file.getName(), folderName);
+        //String hash = hashFile(file.getName(), folderName);
+        //what cursor added
+        // Ensure hashing uses the correct parent directory for nested files
+        String parentFolder = (file.getParent() == null) ? "" : file.getParent();
+        String hash = hashFile(file.getName(), parentFolder);
+        //end
         String pathString = file.getAbsolutePath();
         int indexOfFolderName = pathString.indexOf(folderName);
         String toWrite = "";
@@ -415,3 +420,4 @@ public class Git {
         //how do i get the head file to point to something... do i just write into the HEAD file...?
     }
 }
+
