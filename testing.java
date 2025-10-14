@@ -3,12 +3,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class testing {
     public static void main(String[] args) throws IOException {
-
-        testWorkingList();
+        robustReset();
+        fullReset();
 
         //tree testing 
         // testTreeMakerOneNested();
@@ -33,8 +34,68 @@ public class testing {
         // cleanup(gitFile);
         // cycles(gitFile);
 
-        // fullReset();
+        //fullReset();
 
+    }
+
+    public static void robustReset(){
+        try{
+            File objectsDir = new File("git/objects");
+            if(objectsDir.exists() && objectsDir.isDirectory()){
+                for (File random : objectsDir.listFiles()) {
+                    if(random.isFile()){
+                        random.delete();
+                    }
+                }
+            }
+            File indexFile = new File("git", "index");
+            if(indexFile.exists()){
+                Files.write(indexFile.toPath(), new byte[0]);
+            }
+            File samplesDir = new File("samples");
+            if(samplesDir.exists()){
+                deleteRecursively(samplesDir);
+            }
+            System.out.println("SUCCCCCESS");
+        }
+        catch (Exception e){
+            System.out.println("Uh oh... look what happened: " + e.getMessage());
+        }
+    }
+
+    public static void deleteRecursively(File file){
+        if(file.exists()){
+            if(file.isDirectory()){
+                for (File subFile : file.listFiles()) {
+                    deleteRecursively(subFile);
+                }
+            }
+            file.delete();
+        }
+    }
+
+    public static void testCommitOnce() throws IOException{
+        Git.createGitRepository();
+        createSampleFilesNested();
+        testAddToIndex();
+        testAddToIndex2();
+        testAddToIndexNested();
+        testWorkingList();
+        testCommit();
+        testSecondCommitAfterModification();
+        robustReset();
+    }
+
+    public static void testCommitTwice() throws IOException{
+        Git.createGitRepository();
+        createSampleFilesNested();
+        testAddToIndex();
+        testAddToIndex2();
+        testAddToIndexNested();
+        testWorkingList();
+        testCommit();
+        testSecondCommitAfterModification();
+        fullReset();
     }
 
     public static boolean checkExists() {
@@ -129,6 +190,34 @@ public class testing {
         Git.addToIndex(file, folderName);
     }
 
+    public static void testAddToIndexNested2() throws IOException {
+        File file = new File("Samples/inner", "committylitty.txt");
+        String folderName = "Samples/inner";
+        Git.addToIndex(file, folderName);
+    }
+
+    public static List<File> createSampleFilesNested() throws IOException {
+        File samplesDir = new File("Samples");
+        if (!samplesDir.exists()) {
+            samplesDir.mkdir();
+        }
+        List<File> files = new ArrayList<>();
+        String[] mainFileNames = {"hello", "test"};
+        String[] mainContents = {"HELLOO PRISCILLAA", "6767"};
+        for (int i = 0; i < mainFileNames.length; i++) {
+            File file = new File(samplesDir, mainFileNames[i] + ".txt");
+            Files.write(file.toPath(), mainContents[i].getBytes());
+            files.add(file);
+        }
+        File subDir = new File(samplesDir, "Inner");
+        if (!subDir.exists()) {
+            subDir.mkdir();
+        }
+        File insideFile = new File(subDir, "inside.txt");
+        Files.write(insideFile.toPath(), "hihi".getBytes());
+        files.add(insideFile);
+        return files;
+    }
 
     public static void testIndexContains() throws IOException{
         File indexFile = new File("git", "index");
@@ -150,6 +239,15 @@ public class testing {
     }
 
     public static void testWorkingList() throws IOException{
-        Git.makeTree();
+        System.out.println(Git.makeTree());
+    }
+
+    public static void testCommit() throws IOException{
+        Git.commit("ellika", "best commit ever");
+    }
+
+    public static void testSecondCommitAfterModification() throws IOException{
+        testAddToIndex2();
+        Git.commit("talia", "best ever");
     }
 }

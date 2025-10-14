@@ -8,8 +8,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 
 public class Git {
     public static void main(String[] args) throws IOException {
@@ -107,7 +109,12 @@ public class Git {
     }
 
     public static void addToIndex(File file, String folderName) throws IOException {
-        String hash = hashFile(file.getName(), folderName);
+        //String hash = hashFile(file.getName(), folderName);
+        //what cursor added
+        // Ensure hashing uses the correct parent directory for nested files
+        String parentFolder = (file.getParent() == null) ? "" : file.getParent();
+        String hash = hashFile(file.getName(), parentFolder);
+        //end
         String pathString = file.getAbsolutePath();
         int indexOfFolderName = pathString.indexOf(folderName);
         String toWrite = "";
@@ -132,6 +139,7 @@ public class Git {
             }
 
             BLOB(file, hash);
+
         } else if (!indexContains(indexFile, listy, toWrite)) {
             if (checkModified(indexFile, listy, toWrite) >= 0) {
                 int indexOfModified = checkModified(indexFile, listy, toWrite);
@@ -147,6 +155,7 @@ public class Git {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                 BLOB(file, hash);
             }
 
             else {
@@ -267,7 +276,7 @@ public class Git {
         }
     }
 
-    public static void makeTree() throws IOException {
+    public static String makeTree() throws IOException {
 
         Path indexPath = Paths.get("git/index");
 
@@ -279,7 +288,11 @@ public class Git {
         ArrayList<String> listy = new ArrayList<String>(Arrays.asList(arr));
         Git.addBlob(listy);
         // sorts listy by longest pathName - working list!
-        Git.makeTreeRecursive(listy, getIndexToWorkOn(listy));
+        ArrayList<String> treelist = Git.makeTreeRecursive(listy, getIndexToWorkOn(listy));
+        return treelist.get(0); // added this and modified line above
+        // String last = treelist.get(treelist.size() - 1);
+        // String[] parts = last.split(" ");
+        // return parts[1];
     }
 
     public static ArrayList<String> makeTreeRecursive(ArrayList<String> workingList, int index) throws IOException {
@@ -293,15 +306,18 @@ public class Git {
             }
             toWrite = toWrite.substring(0, toWrite.length() - 1);
 
-            File rootTree = new File(generateSHA1HashHelper(toWrite));
-            rootTree.createNewFile();
+            File rootTree = new File("git/objects", generateSHA1HashHelper(toWrite));
+            rootTree.createNewFile(); 
 
             try {
                 Files.write(Paths.get(rootTree.getAbsolutePath()), toWrite.getBytes(StandardCharsets.UTF_8));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return null;
+
+            ArrayList<String> rootHash = new ArrayList<>();
+            rootHash.add(generateSHA1HashHelper(toWrite)); //added this to ensure returning the right thing
+            return rootHash;
         }
         // gets rid of fileName in path
         String shortenedPath = "";
@@ -331,7 +347,7 @@ public class Git {
         }
         toWrite = toWrite.substring(0, toWrite.length() - 1);
 
-        File dirTree = new File(generateSHA1HashHelper(toWrite));
+        File dirTree = new File("git/objects", generateSHA1HashHelper(toWrite)); // had to edit to save in the objects folder
         dirTree.createNewFile();
 
         try {
@@ -375,4 +391,33 @@ public class Git {
         }
         return longestIndex;
     }
+
+    public static void commit(String author, String messsage) throws IOException{
+        String rootHash = makeTree();
+        Path headPath = Paths.get("git/HEAD");
+        String parent = "";
+        if(Files.exists(headPath)){
+            String lastCommitString = Files.readString(headPath);
+            if(!lastCommitString.isEmpty()){
+                parent = lastCommitString;
+            }
+        }
+        //how to get date and time? look up when you have wifi
+
+        String commitContents = "";
+        commitContents += "tree: " + rootHash + "\n";
+        commitContents += "parent: " + parent + "\n";
+        commitContents += "author: " + author + "\n";
+        Date currentdate = new Date();
+        commitContents += "date: " + currentdate + "\n";
+        commitContents += "message: " + messsage + "\n";
+
+        String commitHash = generateSHA1HashHelper(commitContents);
+        File commitFile = new File("git/objects", commitHash);
+        commitFile.createNewFile();
+        Files.write(commitFile.toPath(), commitContents.getBytes(StandardCharsets.UTF_8));
+        Files.write(headPath, commitHash.getBytes(StandardCharsets.UTF_8));
+        //how do i get the head file to point to something... do i just write into the HEAD file...?
+    }
 }
+
